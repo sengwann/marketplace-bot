@@ -1,0 +1,77 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Only 3 states. A listing is claimed by flipping PENDING -> APPROVED
+// atomically, then the channel post is made. If posting fails it is flipped back.
+enum ListingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Availability {
+  AVAILABLE
+  SOLD_OUT
+}
+
+model Listing {
+  id            String @id @default(uuid())
+  publicId      String @unique @map("public_id")
+  // Generated once per wizard run. Stops double-tap duplicates.
+  submissionKey String @unique @map("submission_key")
+
+  sellerTelegramId BigInt  @map("seller_telegram_id")
+  sellerUsername   String? @map("seller_username")
+  sellerFirstName  String? @map("seller_first_name")
+
+  productName  String   @map("product_name")
+  category     String
+  location     String
+  priceAmount  Decimal  @map("price_amount") @db.Decimal(14, 2)
+  currency     String
+  condition    String
+  note         String?
+  contact      String
+  photoFileIds String[] @map("photo_file_ids")
+
+  status          ListingStatus @default(PENDING)
+  availability    Availability  @default(AVAILABLE)
+  rejectionReason String?       @map("rejection_reason")
+
+  // Admin group control message. adminNotifiedAt = null means "not delivered yet",
+  // which is what the retry job looks for.
+  adminMessageId  BigInt?   @map("admin_message_id")
+  adminNotifiedAt DateTime? @map("admin_notified_at")
+
+  channelMessageId BigInt? @map("channel_message_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status, adminNotifiedAt, createdAt])
+  @@index([sellerTelegramId])
+  @@map("listings")
+}
+
+model BotSession {
+  key       String   @id
+  data      Json
+  expiresAt DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("bot_sessions")
+}
+
+model Setting {
+  key   String @id
+  value String
+
+  @@map("settings")
+}

@@ -1,0 +1,35 @@
+{
+  "name": "skk-marketplace-bot",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Telegram marketplace bot for Shwe Kokko and Myawaddy",
+  "scripts": {
+    "dev": "tsx watch src/bot.ts",
+    "build": "prisma generate && tsc",
+    "start": "prisma migrate deploy && node dist/bot.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:migrate": "prisma migrate dev"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.0.0",
+    "@prisma/client": "^7.0.0",
+    "@sentry/node": "^10.0.0",
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.0",
+    "pino": "^9.5.0",
+    "prisma": "^7.0.0",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "pino-pretty": "^13.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}

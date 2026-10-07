@@ -1,0 +1,59 @@
+name: CI
+
+# Runs on every push to main and on every pull request.
+# It never touches a real database or Telegram: the values below are dummies.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: postgresql://user:password@localhost:5432/ci
+      BOT_TOKEN: "123456:ci-dummy-token"
+      ADMIN_CHAT_ID: "-1001"
+      CHANNEL_ID: "-1002"
+      ADMIN_USER_IDS: "1"
+      CHANNEL_NAME: CI
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Same Node version as .nvmrc / .node-version / Render.
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        # npm ci is exact and fast but needs package-lock.json.
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Audit production dependencies (warning only)
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
