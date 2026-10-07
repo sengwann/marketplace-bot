@@ -1,3 +1,4 @@
+
 # SKK Marketplace Bot (v2, lean)
 
 Sellers fill a wizard → listing goes to the admin group → admins approve / reject / edit →
@@ -139,3 +140,5 @@ UPDATE listings SET channel_message_id=<NUMBER> WHERE public_id='SKxxxxxxx';
 ```
 
 **Sold-out edit fails:** the database is already changed; run `/soldout SKxxxxxxx` again.
+# marketplace-bot
+
