@@ -1,4 +1,3 @@
-
 # SKK Marketplace Bot (v2, lean)
 
 Sellers fill a wizard → listing goes to the admin group → admins approve / reject / edit →
@@ -73,8 +72,9 @@ complains about `moduleFormat`, change it in `prisma/schema.prisma` to match you
    into `DATABASE_URL`, and set `DATABASE_SSL=true`. Do not use the "Direct connection"
    (Render cannot reach it).
 2. **Render:** New > Web Service, instance type **Free**.
-   - Build command: `npm install --include=dev && npm run build`
-   - Start command: `npm start` (runs `prisma migrate deploy`, then the bot)
+   - Build command: `npm install --include=dev && npm run render-build`
+     (creates/updates the database tables with `prisma migrate deploy`, then builds)
+   - Start command: `npm start` (only starts the bot, so it opens its port within seconds)
    - Health check path: `/healthz`
    - Env vars: everything in `.env.example`. `WEBHOOK_DOMAIN` is your service address,
      e.g. `https://skk-bot.onrender.com`. The webhook is registered automatically on start.
@@ -111,6 +111,28 @@ complains about `moduleFormat`, change it in `prisma/schema.prisma` to match you
 What runs on Render: the spam throttle, the one-update-at-a-time queue per user, and the
 stuck-listing retry (every 5 minutes) all work as before.
 
+## First-time database setup (do this once)
+
+The bot needs its tables (`listings`, `bot_sessions`, `settings`) in Supabase. Without them it
+stops at start-up with "The table `public.bot_sessions` does not exist".
+
+1. On your computer, put the Supabase **Session pooler** string (port 5432) in your local `.env`
+   as `DATABASE_URL`, with `DATABASE_SSL=true`.
+2. In the project folder, run ONE of these:
+   - There is **no** `prisma/migrations/` folder yet: `npx prisma migrate dev --name init`
+     (creates the folder and the tables).
+   - The folder **exists**: `npx prisma migrate deploy` (creates the tables from it).
+3. Check in Supabase (Table Editor) that the three tables exist.
+4. **Commit and push the `prisma/migrations/` folder to GitHub.** Render's build runs
+   `prisma migrate deploy` from it, so it must be in the repo. Then redeploy on Render.
+
+If step 2 says it cannot create a shadow database (Supabase can refuse this), generate the
+SQL without one instead:
+`npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > init.sql`,
+save it as `prisma/migrations/20260101000000_init/migration.sql`, add a file
+`prisma/migrations/migration_lock.toml` containing `provider = "postgresql"`, and run
+`npx prisma migrate deploy`.
+
 ## Production files
 
 - `.nvmrc` and `.node-version`: Node 22. Local tools (nvm, fnm, Volta) and Render read these.
@@ -140,5 +162,3 @@ UPDATE listings SET channel_message_id=<NUMBER> WHERE public_id='SKxxxxxxx';
 ```
 
 **Sold-out edit fails:** the database is already changed; run `/soldout SKxxxxxxx` again.
-# marketplace-bot
-

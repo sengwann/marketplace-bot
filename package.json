@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/bot.ts",
     "build": "prisma generate && tsc",
-    "start": "prisma migrate deploy && node dist/bot.js",
+    "render-build": "prisma migrate deploy && npm run build",
+    "start": "node dist/bot.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:migrate": "prisma migrate dev"

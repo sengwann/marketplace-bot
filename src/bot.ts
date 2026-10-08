@@ -1,4 +1,8 @@
 import { config } from "./config"; // must be first: loads .env
+import dns from "node:dns";
+
+dns.setDefaultResultOrder("ipv4first");
+
 import http from "node:http";
 import { createBot, Sentry } from "./app";
 import { closeDatabase, prisma } from "./db";
@@ -12,7 +16,7 @@ import { deleteExpiredSessions } from "./session";
 const bot = createBot();
 
 // ------------------------------------------------------------
-// HTTP server: health checks + the Telegram webhook
+// HTTP server: health checks + thse Telegram webhook
 // ------------------------------------------------------------
 
 const useWebhook = config.webhookDomain !== "";
@@ -138,6 +142,12 @@ async function setupMenus() {
 
 main().catch((err) => {
   Sentry.captureException(err);
+  if ((err as { code?: string }).code === "P2021") {
+    logger.error(
+      "The database tables do not exist yet. Create them with `npx prisma migrate deploy` " +
+        "(see README, section 'First-time database setup').",
+    );
+  }
   logger.error({ err }, "Failed to start");
   process.exit(1);
 });

@@ -1,16 +1,10 @@
-# Render Blueprint: describes the service so you can create it with one click
-# (Render dashboard > New > Blueprint). Optional: you can also create the service by hand
-# with the same settings, see README.
-#
-# region: pick the one closest to your Supabase database (Singapore for most of Asia).
-
 services:
   - type: web
     name: skk-bot
     runtime: node
     plan: free
     region: singapore
-    buildCommand: npm install --include=dev && npm run build
+    buildCommand: npm install --include=dev && npm run render-build
     startCommand: npm start
     healthCheckPath: /healthz
     autoDeploy: true
@@ -21,7 +15,6 @@ services:
         value: "22"
       - key: DATABASE_SSL
         value: "true"
-      # Secrets and your own values: Render asks for them when you create the service.
       - key: BOT_TOKEN
         sync: false
       - key: ADMIN_CHAT_ID

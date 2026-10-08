@@ -1,5 +1,6 @@
 import { config } from "./config"; // must be first: loads .env
 import * as Sentry from "@sentry/node";
+import https from "node:https";
 import { Markup, Scenes, session, Telegraf } from "telegraf";
 import { registerAdmin } from "./admin";
 import { logger } from "./logger";
@@ -19,7 +20,13 @@ Sentry.init({
 // Builds the bot with all its handlers. It does NOT start anything: no server,
 // no polling, no timers. That is done by src/bot.ts.
 export function createBot(): Telegraf<MyContext> {
-  const bot = new Telegraf<MyContext>(config.botToken);
+  const agent = new https.Agent({ family: 4 });
+
+const bot = new Telegraf<MyContext>(config.botToken, {
+  telegram: {
+    agent,
+  },
+});
 
   // ------------------------------------------------------------
   // Middleware order matters:
